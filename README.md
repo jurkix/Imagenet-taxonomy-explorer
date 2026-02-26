@@ -64,6 +64,8 @@ prisma/           Schema + migrations (includes pg_trgm GIN index)
 
 **React.memo on TreeNodeRow** - Prevents re-rendering all visible rows when a single node is toggled.
 
+**Accessibility** - Tree uses ARIA tree pattern (`role="tree"`, `treeitem`, `aria-expanded`, `aria-level`). Modal has `aria-modal` with focus restoration and Escape to close. All interactive elements are keyboard-navigable via native `<button>` elements.
+
 ## What I'm Most Proud Of
 
 The tree expansion system. A `Set<string>` of expanded paths drives `useQueries` to subscribe to all open nodes simultaneously. React Query handles caching and deduplication. The tree flattens into a virtual list via `useMemo` on every toggle, and only visible rows hit the DOM.
