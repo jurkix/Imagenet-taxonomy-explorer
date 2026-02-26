@@ -1,4 +1,4 @@
-import type { ApiTreeNode, SearchResult } from "./types";
+import type { ApiTreeNode, SearchResult } from "./types.js";
 
 interface SynsetFields {
   id: number;

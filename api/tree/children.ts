@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { prisma } from "../../lib/prisma";
-import { toApiNode } from "../../lib/mappers";
+import { prisma } from "../../lib/prisma.js";
+import { toApiNode } from "../../lib/mappers.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
