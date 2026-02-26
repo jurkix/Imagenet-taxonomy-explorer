@@ -16,6 +16,6 @@ model Synset {
   name       String
 
   @@index([parentPath], name: "idx_parent_path")
-  @@index([name], name: "idx_name_trgm", type: Gin)
+  // GIN trigram index on name is defined in migration SQL (requires pg_trgm extension)
   @@map("synsets")
 }
