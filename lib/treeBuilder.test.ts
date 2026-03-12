@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { buildTree } from "./treeBuilder";
-import type { LinearNode } from "./types";
 
 describe("buildTree", () => {
   it("returns null for empty input", () => {
@@ -8,21 +7,20 @@ describe("buildTree", () => {
   });
 
   it("builds a single root node", () => {
-    const tuples: LinearNode[] = [{ path: "Root", size: 0 }];
-    const tree = buildTree(tuples);
+    const tree = buildTree([
+      { path: "Root", name: "Root", size: 0, parentPath: null },
+    ]);
     expect(tree).toEqual({ name: "Root", size: 0, children: [] });
   });
 
-  it("builds a simple tree from linear tuples", () => {
-    const tuples: LinearNode[] = [
-      { path: "Root", size: 4 },
-      { path: "Root > Animal", size: 2 },
-      { path: "Root > Animal > Dog", size: 0 },
-      { path: "Root > Animal > Cat", size: 0 },
-      { path: "Root > Plant", size: 0 },
-    ];
-
-    const tree = buildTree(tuples);
+  it("builds a tree using parentPath lookups", () => {
+    const tree = buildTree([
+      { path: "Root", name: "Root", size: 4, parentPath: null },
+      { path: "Root > Animal", name: "Animal", size: 2, parentPath: "Root" },
+      { path: "Root > Plant", name: "Plant", size: 0, parentPath: "Root" },
+      { path: "Root > Animal > Dog", name: "Dog", size: 0, parentPath: "Root > Animal" },
+      { path: "Root > Animal > Cat", name: "Cat", size: 0, parentPath: "Root > Animal" },
+    ]);
 
     expect(tree!.name).toBe("Root");
     expect(tree!.size).toBe(4);
@@ -36,27 +34,13 @@ describe("buildTree", () => {
     expect(plant!.children).toHaveLength(0);
   });
 
-  it("handles unordered input (sorts by depth internally)", () => {
-    const tuples: LinearNode[] = [
-      { path: "Root > A > B", size: 0 },
-      { path: "Root", size: 2 },
-      { path: "Root > A", size: 1 },
-    ];
-
-    const tree = buildTree(tuples);
-    expect(tree!.name).toBe("Root");
-    expect(tree!.children[0].name).toBe("A");
-    expect(tree!.children[0].children[0].name).toBe("B");
-  });
-
   it("preserves size values correctly", () => {
-    const tuples: LinearNode[] = [
-      { path: "Root", size: 60941 },
-      { path: "Root > Plants", size: 4699 },
-      { path: "Root > Plants > Fern", size: 0 },
-    ];
+    const tree = buildTree([
+      { path: "Root", name: "Root", size: 60941, parentPath: null },
+      { path: "Root > Plants", name: "Plants", size: 4699, parentPath: "Root" },
+      { path: "Root > Plants > Fern", name: "Fern", size: 0, parentPath: "Root > Plants" },
+    ]);
 
-    const tree = buildTree(tuples);
     expect(tree!.size).toBe(60941);
     expect(tree!.children[0].size).toBe(4699);
     expect(tree!.children[0].children[0].size).toBe(0);

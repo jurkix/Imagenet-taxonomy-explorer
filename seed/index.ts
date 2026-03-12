@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { PrismaClient } from "@prisma/client";
-import { parseXmlToLinear } from "./parseXml";
+import { parseXmlToSeedNodes } from "./parseXml";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,41 +24,26 @@ async function main() {
 
     console.log("Parsing XML...");
     const start = performance.now();
-    const tuples = parseXmlToLinear(xml);
+    const nodes = parseXmlToSeedNodes(xml);
     console.log(
-      `Parsed ${tuples.length} nodes in ${(performance.now() - start).toFixed(0)}ms`,
+      `Parsed ${nodes.length} nodes in ${(performance.now() - start).toFixed(0)}ms`,
     );
 
     console.log("Seeding database...");
     const seedStart = performance.now();
 
-    for (let i = 0; i < tuples.length; i += BATCH_SIZE) {
-      const batch = tuples.slice(i, i + BATCH_SIZE);
-      await prisma.synset.createMany({
-        data: batch.map((t) => {
-          const segments = t.path.split(" > ");
-          return {
-            path: t.path,
-            size: t.size,
-            depth: segments.length,
-            parentPath:
-              segments.length > 1
-                ? segments.slice(0, -1).join(" > ")
-                : null,
-            name: segments[segments.length - 1],
-          };
-        }),
-        skipDuplicates: true,
-      });
+    for (let i = 0; i < nodes.length; i += BATCH_SIZE) {
+      const batch = nodes.slice(i, i + BATCH_SIZE);
+      await prisma.synset.createMany({ data: batch, skipDuplicates: true });
 
       if ((i / BATCH_SIZE) % 20 === 0) {
-        const progress = Math.round((i / tuples.length) * 100);
-        console.log(`  ${progress}% (${i}/${tuples.length})`);
+        const progress = Math.round((i / nodes.length) * 100);
+        console.log(`  ${progress}% (${i}/${nodes.length})`);
       }
     }
 
     console.log(
-      `Seeded ${tuples.length} rows in ${(performance.now() - seedStart).toFixed(0)}ms`,
+      `Seeded ${nodes.length} rows in ${(performance.now() - seedStart).toFixed(0)}ms`,
     );
   } finally {
     await prisma.$disconnect();

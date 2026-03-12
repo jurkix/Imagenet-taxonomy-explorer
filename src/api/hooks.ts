@@ -1,7 +1,16 @@
 import { useSuspenseQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiFetch } from "./client";
-import { SEARCH_MIN_QUERY_LENGTH, SEARCH_PAGE_SIZE } from "@/constants";
-import type { ApiTreeNode, SearchResult, PaginatedResponse } from "@lib/types";
+import type { ApiTreeNode, SearchResult } from "@lib/types";
+
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export const SEARCH_MIN_QUERY_LENGTH = 2;
+const SEARCH_PAGE_SIZE = 50;
 
 export function useRoots() {
   return useSuspenseQuery({

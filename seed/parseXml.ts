@@ -1,5 +1,12 @@
 import { XMLParser } from "fast-xml-parser";
-import type { LinearNode } from "../lib/types";
+
+interface SeedNode {
+  path: string;
+  name: string;
+  size: number;
+  depth: number;
+  parentPath: string | null;
+}
 
 interface XmlSynset {
   "@_wnid": string;
@@ -8,7 +15,7 @@ interface XmlSynset {
   synset?: XmlSynset[];
 }
 
-export function parseXmlToLinear(xmlContent: string): LinearNode[] {
+export function parseXmlToSeedNodes(xmlContent: string): SeedNode[] {
   const parser = new XMLParser({
     ignoreAttributes: false,
     isArray: (name) => name === "synset",
@@ -16,26 +23,25 @@ export function parseXmlToLinear(xmlContent: string): LinearNode[] {
 
   const parsed = parser.parse(xmlContent);
   const rootSynsets: XmlSynset[] = parsed.ImageNetStructure.synset;
-  const results: LinearNode[] = [];
+  const results: SeedNode[] = [];
 
-  function traverse(node: XmlSynset, parentPath: string): number {
-    const currentPath = parentPath
-      ? `${parentPath} > ${node["@_words"]}`
-      : node["@_words"];
+  function traverse(node: XmlSynset, parentPath: string | null, depth: number): number {
+    const name = node["@_words"];
+    const currentPath = parentPath ? `${parentPath} > ${name}` : name;
 
     const children = node.synset ?? [];
     let descendantCount = children.length;
 
     for (const child of children) {
-      descendantCount += traverse(child, currentPath);
+      descendantCount += traverse(child, currentPath, depth + 1);
     }
 
-    results.push({ path: currentPath, size: descendantCount });
+    results.push({ path: currentPath, name, size: descendantCount, depth, parentPath });
     return descendantCount;
   }
 
   for (const root of rootSynsets) {
-    traverse(root, "");
+    traverse(root, null, 1);
   }
 
   return results;

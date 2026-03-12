@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { prisma } from "../../lib/prisma.js";
 import { toApiNode } from "../../lib/mappers.js";
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
-  if (_req.method !== "GET") {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }

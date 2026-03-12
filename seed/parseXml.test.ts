@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseXmlToLinear } from "./parseXml";
+import { parseXmlToSeedNodes } from "./parseXml";
 
 const SMALL_XML = `
 <ImageNetStructure>
@@ -17,9 +17,9 @@ const SMALL_XML = `
 </ImageNetStructure>
 `;
 
-describe("parseXmlToLinear", () => {
-  it("parses XML into linear nodes with correct paths", () => {
-    const result = parseXmlToLinear(SMALL_XML);
+describe("parseXmlToSeedNodes", () => {
+  it("parses XML into nodes with correct paths", () => {
+    const result = parseXmlToSeedNodes(SMALL_XML);
     const paths = result.map((n) => n.path);
 
     expect(paths).toContain("Root");
@@ -32,7 +32,7 @@ describe("parseXmlToLinear", () => {
   });
 
   it("computes correct sizes (descendant counts)", () => {
-    const result = parseXmlToLinear(SMALL_XML);
+    const result = parseXmlToSeedNodes(SMALL_XML);
     const byPath = Object.fromEntries(result.map((n) => [n.path, n.size]));
 
     expect(byPath["Root > Animal > Dog > Poodle"]).toBe(0);
@@ -44,8 +44,23 @@ describe("parseXmlToLinear", () => {
     expect(byPath["Root"]).toBe(6); // Animal(1+4) + Plant(1)
   });
 
+  it("computes correct name, depth, and parentPath", () => {
+    const result = parseXmlToSeedNodes(SMALL_XML);
+    const byPath = Object.fromEntries(result.map((n) => [n.path, n]));
+
+    const root = byPath["Root"];
+    expect(root.name).toBe("Root");
+    expect(root.depth).toBe(1);
+    expect(root.parentPath).toBeNull();
+
+    const dog = byPath["Root > Animal > Dog"];
+    expect(dog.name).toBe("Dog");
+    expect(dog.depth).toBe(3);
+    expect(dog.parentPath).toBe("Root > Animal");
+  });
+
   it("returns correct total count of nodes", () => {
-    const result = parseXmlToLinear(SMALL_XML);
+    const result = parseXmlToSeedNodes(SMALL_XML);
     expect(result).toHaveLength(7);
   });
 
@@ -58,7 +73,7 @@ describe("parseXmlToLinear", () => {
       </synset>
     </ImageNetStructure>`;
 
-    const result = parseXmlToLinear(xml);
+    const result = parseXmlToSeedNodes(xml);
     expect(result).toHaveLength(2);
     expect(result.find((n) => n.path === "Root > Only Child")).toBeTruthy();
   });

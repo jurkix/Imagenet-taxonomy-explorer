@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 @theme {
   --color-background: #f8f9fb;
@@ -13,6 +14,7 @@
   --color-badge-foreground: #4338ca;
   --color-tree-hover: #f1f5f9;
   --color-tree-active: #eef2ff;
+  --color-destructive: #ef4444;
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
   --shadow-elevated: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
 }
@@ -24,4 +26,3 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
 }
-

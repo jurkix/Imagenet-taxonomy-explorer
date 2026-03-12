@@ -1,30 +1,51 @@
-import { useRef, useMemo } from "react";
+import { memo, useRef, useMemo, useState, useCallback } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRoots } from "@/api/hooks";
 import { apiFetch } from "@/api/client";
-import { useTreeExpansion } from "@/hooks/useTreeExpansion";
 import { TreeNodeRow } from "./TreeNodeRow";
-import type { ApiTreeNode, FlatNode } from "@lib/types";
-import { TREE_ROW_HEIGHT, TREE_OVERSCAN } from "@/constants";
+import type { ApiTreeNode } from "@lib/types";
 
-export function TreeView({
+const TREE_ROW_HEIGHT = 44;
+const TREE_OVERSCAN = 15;
+
+interface FlatNode {
+  node: ApiTreeNode;
+  depth: number;
+  isLoading: boolean;
+  hasError?: boolean;
+}
+
+export const TreeView = memo(function TreeView({
   onSelect,
 }: {
   onSelect?: (node: ApiTreeNode) => void;
 }) {
   const { data: rootsData } = useRoots();
-  const { expandedPaths, toggle } = useTreeExpansion();
   const parentRef = useRef<HTMLDivElement>(null);
+
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const toggle = useCallback((path: string) => {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }, []);
 
   const expandedArray = useMemo(() => [...expandedPaths], [expandedPaths]);
 
   const { childrenMap, errorPaths } = useQueries({
     queries: expandedArray.map((path) => ({
       queryKey: ["tree", "children", path],
-      queryFn: () =>
+      queryFn: ({ signal }) =>
         apiFetch<{ data: ApiTreeNode[] }>(
           `/api/tree/children?parentPath=${encodeURIComponent(path)}`,
+          signal,
         ),
     })),
     combine: (results) => {
@@ -73,20 +94,20 @@ export function TreeView({
 
   if (flatNodes.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-16 text-center shadow-(--shadow-card)">
-        <p className="text-sm text-muted-foreground">
-          No data available. Run{" "}
-          <code className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium">
-            npm run seed
-          </code>{" "}
-          first.
-        </p>
+      <div className="card card-bordered border-border bg-card shadow-(--shadow-card)">
+        <div className="card-body items-center p-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            No data available. Run{" "}
+            <kbd className="kbd kbd-sm">npm run seed</kbd>{" "}
+            first.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-(--shadow-card)">
+    <div className="card card-bordered border-border bg-card shadow-(--shadow-card) overflow-hidden">
       <div
         ref={parentRef}
         className="max-h-100 overflow-auto p-2 pb-1"
@@ -135,4 +156,4 @@ export function TreeView({
       </div>
     </div>
   );
-}
+});
